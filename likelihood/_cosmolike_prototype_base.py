@@ -288,36 +288,17 @@ class _cosmolike_prototype_base(DataSetLikelihood):
   # ------------------------------------------------------------------------
 
   def set_lens_related(self, **params_values):
+    ntomo = self.lens_ntomo
     ci.set_nuisance_bias(
-      B1 = [
-        params_values.get(p, None) for p in [
-          survey+"_B1_"+str(i+1) for i in range(self.lens_ntomo)
-        ]
-      ],
-      B2 = [
-        params_values.get(p, None) for p in [
-          survey+"_B2_"+str(i+1) for i in range(self.lens_ntomo)
-        ]
-      ],
-      B_MAG = [
-        params_values.get(p, None) for p in [
-          survey+"_BMAG_"+str(i+1) for i in range(self.lens_ntomo)
-        ]
-      ]
+      B1 = [params_values.get(p, None) for p in [survey+"_B1_"+str(i+1) for i in range(ntomo)]],
+      B2 = [params_values.get(p, None) for p in [survey+"_B2_"+str(i+1) for i in range(ntomo)]],
+      B_MAG = [params_values.get(p, None) for p in [survey+"_BMAG_"+str(i+1) for i in range(ntomo)]]
     )
     ci.set_nuisance_clustering_photoz(
-      bias = [
-        params_values.get(p, None) for p in [
-          survey+"_DZ_L"+str(i+1) for i in range(self.lens_ntomo)
-        ]
-      ]
+      bias = [params_values.get(p, None) for p in [survey+"_DZ_L"+str(i+1) for i in range(ntomo)]]
     )
     ci.set_point_mass(
-      PMV = [
-        params_values.get(p, None) for p in [
-          survey+"_PM"+str(i+1) for i in range(self.lens_ntomo)
-        ]
-      ]
+      PMV = [params_values.get(p, None) for p in [survey+"_PM"+str(i+1) for i in range(ntomo)]]
     )
 
   # ------------------------------------------------------------------------

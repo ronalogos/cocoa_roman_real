@@ -1,13 +1,13 @@
 path: null
 data_file: roman_real_M1_GGL0.05.dataset
 accuracyboost: 1.0
-samplingboost: 1.0
 integration_accuracy: 0 
 kmax_boltzmann: 5.0
 speed: 1
 non_linear_emul: 2
 debug: False
-
+lmax: 75000 # lmax computed for real space correlation function (
+            # accuracy boost affect this number)
 # IA REDSHIFT EVOLUTION: 0 = NO_IA (AMPLITUDES SET TO ZERO), 
 #                        1 = IA_NLA_LF
 #                        2 = IA_REDSHIFT_BINNING, 
@@ -17,6 +17,8 @@ IA_redshift_evolution: 3
 # IA_MODEL: 0 = NLA, 
 #           1 = TATT
 IA_model: 0 
+external_nz_modeling: 0
+use_emulator: False
 
 # YES YOU NEED GGL_EXCLUDE EVEN HERE TO MATCH THE SIZE OF THE DATA VECTOR
 ggl_exclude: [[6,0],[7,0],[7,1]]

@@ -6,9 +6,10 @@ likelihood:
   roman_real.roman_real_3x2pt:
     path: ./external_modules/data/roman_real
     data_file: example1.dataset # that assumes lens = source
-    accuracyboost: 1.0
+    lmax: 100000            # lmax computed for real space correlation function
+    accuracyboost: 1.2      # ab=1.2 seems more appropriate
     integration_accuracy: 0
-    kmax_boltzmann: 5.0
+    kmax_boltzmann: 7.5
     # 1 EE2, 2 Halofit
     non_linear_emul: 2
     IA_model: 0
@@ -533,14 +534,11 @@ theory:
     use_renames: True
     extra_args:
       halofit_version: takahashi
-      AccuracyBoost: 1.1
-      kmax: 5
-      lens_potential_accuracy: 1.0
-      num_massive_neutrinos: 1
-      nnu: 3.046
+      AccuracyBoost: 1.0
       dark_energy_model: ppf
       accurate_massive_neutrino_transfers: false
-      k_per_logint: 15
+      k_per_logint: 20
+      kmax: 20
 
 sampler:
   evaluate:

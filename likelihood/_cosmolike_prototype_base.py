@@ -358,3 +358,164 @@ class _cosmolike_prototype_base(DataSetLikelihood):
   # ------------------------------------------------------------------------
   # ------------------------------------------------------------------------
   # ------------------------------------------------------------------------
+
+  def compute_logp(self, datavector):
+    return -0.5 * ci.compute_chi2(datavector)
+
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  
+  def logp(self, **params):
+    return self.compute_logp(self.get_datavector(**params))
+
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+
+  def get_datavector(self, **params):        
+    if self.use_emulator:
+      dv = self.internal_get_datavector_emulator(**params)
+    else:
+      dv = self.internal_get_datavector(**params)
+    return np.array(dv,dtype='float64')
+
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+
+  def internal_get_datavector_emulator(self, **params):
+    # ---------------------------------------------------------------
+    # fast parameters: m's and pm's are never emulated
+    PM = [params.get(p,0) for p in [survey+"_PM"+str(i+1) for i in range(self.lens_ntomo)]]
+    if self.probe not in ("xi", "xi_gg") and not all(v == 0 for v in PM):
+      self.set_lens_related(**params)
+      self.set_cosmo_related()
+    self.set_source_related(**params)
+    # ---------------------------------------------------------------
+
+    sizes = ci.compute_data_vector_3x2pt_real_sizes()
+    total_size = int(np.sum(sizes))
+    dv = np.zeros(total_size, dtype='float64') 
+    
+    if self.probe == "xi":
+      tmp = self.provider.get_cosmic_shear()
+      if (len(tmp) != sizes[0]):
+        raise ValueError(f'Incompatible Sizes (Emulator Cosmic Shear)')
+      dv[0:sizes[0]] = tmp[0:sizes[0]]
+    elif self.probe == "xi_ggl":
+      tmp1 = self.provider.get_cosmic_shear()
+      tmp2 = self.provider.get_ggl()
+      if (len(tmp1) != sizes[0] or 
+          len(tmp2) != sizes[1]):
+        raise ValueError(f'Incompatible Sizes (Emulator xi_ggl)')
+      istart = 0
+      iend = sizes[0]
+      dv[istart:iend] = tmp1[0:sizes[0]]
+      
+      istart = sizes[0]
+      iend = sizes[0]+sizes[1]
+      dv[istart:iend] = tmp2[0:sizes[1]]
+    elif self.probe == "3x2pt":
+      tmp1 = self.provider.get_cosmic_shear()
+      tmp2 = self.provider.get_ggl()
+      tmp3 = self.provider.get_wtheta()
+      if (len(tmp1) != sizes[0] or 
+          len(tmp2) != sizes[1] or
+          len(tmp3) != sizes[2]):
+        raise ValueError(f'Incompatible Sizes (Emulator 3x2pt)')
+      istart = 0
+      iend = sizes[0]
+      dv[istart:iend] = tmp1[0:sizes[0]]
+      
+      istart = sizes[0]
+      iend = sizes[0]+sizes[1]
+      dv[istart:iend] = tmp2[0:sizes[1]]
+      
+      istart = sizes[0]+sizes[1]
+      iend = sizes[0]+sizes[1]+sizes[2]
+      dv[istart:iend] = tmp3[0:sizes[2]]
+    elif self.probe == "xi_gg":
+      tmp1 = self.provider.get_cosmic_shear()
+      tmp3 = self.provider.get_wtheta()
+      if (len(tmp1) != sizes[0] or 
+          len(tmp3) != sizes[2]):
+        raise ValueError(f'Incompatible Sizes (Emulator 3x2pt)')
+      istart = 0
+      iend = sizes[0]
+      dv[istart:iend] = tmp1[0:sizes[0]]
+      
+      istart = sizes[0]+sizes[1]
+      iend = sizes[0]+sizes[1]+sizes[2]
+      dv[istart:iend] = tmp3[0:sizes[2]]
+    elif self.probe == "2x2pt": 
+      tmp2 = self.provider.get_ggl()
+      tmp3 = self.provider.get_wtheta()
+      if (len(tmp2) != sizes[1] or
+          len(tmp3) != sizes[2]):
+        raise ValueError(f'Incompatible Sizes (Emulator 3x2pt)')
+      istart = sizes[0]
+      iend = sizes[0]+sizes[1]
+      dv[istart:iend] = tmp2[0:sizes[1]]
+      
+      istart = sizes[0]+sizes[1]
+      iend = sizes[0]+sizes[1]+sizes[2]
+      dv[istart:iend] = tmp3[0:sizes[2]]
+    else:
+      raise ValueError(f'Unknown probe')
+
+    if not self.use_baryon_pca: 
+      if not all(v == 0 for v in PM):
+        dv = ci.compute_add_fpm_3x2pt_real_any_order(datavector=dv,
+                                                     force_exclude_pm=0)
+      else:
+        dv = ci.compute_add_fpm_3x2pt_real_any_order(datavector=dv,
+                                                     force_exclude_pm=1)
+    else:
+      Q = [params.get(p,0) for p in [survey+"_BARYON_Q"+str(i+1) for i in range(self.npcs)]]
+      if not all(v == 0 for v in PM):
+        dv = ci.compute_add_fpm_3x2pt_real_any_order_with_pcs(datavector=dv,
+                                                              Q=Q,
+                                                              force_exclude_pm=0)
+      else:
+        dv = ci.compute_add_fpm_3x2pt_real_any_order_with_pcs(datavector=dv,
+                                                              Q=Q,
+                                                              force_exclude_pm=1)
+    dv = np.array(dv, dtype='float64')
+    
+    if self.print_datavector:
+      size = len(dv)
+      out = np.zeros(shape=(size, 2))
+      out[:,0] = np.arange(0, size)
+      out[:,1] = dv
+      fmt = '%d', '%1.8e'
+      np.savetxt(self.print_datavector_file, out, fmt = fmt)
+    return dv
+
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+
+  def internal_get_datavector(self, **params):
+    self.set_cosmo_related()
+    if self.probe != "xi":
+        self.set_lens_related(**params)
+    self.set_source_related(**params)
+    
+    if self.create_baryon_pca:
+      pcs = ci.compute_baryon_pcas(scenarios=self.baryon_pca_sims)
+      np.savetxt(self.filename_baryon_pca, pcs)
+    elif self.use_baryon_pca: 
+      Q = [params.get(p,0) for p in [survey+"_BARYON_Q"+str(i+1) for i in range(self.npcs)]]     
+      datavector = ci.compute_data_vector_masked_with_baryon_pcs(Q=Q)
+    else:  
+      datavector = ci.compute_data_vector_masked()
+
+    if self.print_datavector:
+      size = len(datavector)
+      out = np.zeros(shape=(size, 2))
+      out[:,0] = np.arange(0, size)
+      out[:,1] = datavector
+      fmt = '%d', '%1.8e'
+      np.savetxt(self.print_datavector_file, out, fmt = fmt)
+    return datavector

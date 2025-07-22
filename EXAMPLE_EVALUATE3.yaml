@@ -6,8 +6,9 @@ likelihood:
   roman_real.roman_real_xi_ggl:
     path: ./external_modules/data/roman_real
     data_file: example1.dataset # that assumes lens = source
-    accuracyboost: 1.0
-    integration_accuracy: 1
+    lmax: 100000            # lmax computed for real space correlation function
+    accuracyboost: 1.2      # ab=1.2 seems more appropriate
+    integration_accuracy: 0
     kmax_boltzmann: 7.5
     # 1 EE2, 2 Halofit
     non_linear_emul: 2

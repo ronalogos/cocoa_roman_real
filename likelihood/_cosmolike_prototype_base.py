@@ -22,30 +22,17 @@ survey = "roman"
 class _cosmolike_prototype_base(DataSetLikelihood):
 
   def initialize(self, probe):
-
-    # ------------------------------------------------------------------------
     ini = IniFile(os.path.normpath(os.path.join(self.path, self.data_file)))
-
     self.probe = probe
-
     self.data_vector_file = ini.relativeFileName('data_file')
-
     self.cov_file = ini.relativeFileName('cov_file')
-
     self.mask_file = ini.relativeFileName('mask_file')
-
     self.lens_file = ini.relativeFileName('nz_lens_file')
-
     self.source_file = ini.relativeFileName('nz_source_file')
-
     self.lens_ntomo = ini.int("lens_ntomo") #5
-
     self.source_ntomo = ini.int("source_ntomo") #4
-
     self.ntheta = ini.int("n_theta")
-
     self.theta_min_arcmin = ini.float("theta_min_arcmin")
-
     self.theta_max_arcmin = ini.float("theta_max_arcmin")
     
     # ------------------------------------------------------------------------   
@@ -96,21 +83,21 @@ class _cosmolike_prototype_base(DataSetLikelihood):
       ci.init_cosmo_runmode(is_linear=False)
 
       if self.external_nz_modeling: 
-        (self.lens_nz, self.source_nz) = ci.read_redshift_distributions(
-            lens_multihisto_file=self.lens_file,
-            lens_ntomo=int(self.lens_ntomo), 
-            source_multihisto_file=self.source_file,
-            source_ntomo=int(self.source_ntomo)
+        (  self.lens_nz, self.source_nz) = ci.read_redshift_distributions(
+            lens_multihisto_file = self.lens_file,
+            lens_ntomo = int(self.lens_ntomo), 
+            source_multihisto_file = self.source_file,
+            source_ntomo = int(self.source_ntomo)
           ) 
         ci.init_lens_sample_size(int(self.lens_ntomo))
         ci.init_source_sample_size(int(self.source_ntomo))
         ci.init_ntomo_powerspectra() # must be called after set_source/lens_size  
       else:
         ci.init_redshift_distributions_from_files(
-          lens_multihisto_file=self.lens_file,
-          lens_ntomo=int(self.lens_ntomo), 
-          source_multihisto_file=self.source_file,
-          source_ntomo=int(self.source_ntomo)) 
+          lens_multihisto_file = self.lens_file,
+          lens_ntomo = int(self.lens_ntomo), 
+          source_multihisto_file = self.source_file,
+          source_ntomo = int(self.source_ntomo)) 
       
       ci.init_data_real(self.cov_file, self.mask_file, self.data_vector_file)
 
@@ -127,8 +114,8 @@ class _cosmolike_prototype_base(DataSetLikelihood):
       if self.non_linear_emul == 1:
         self.emulator = ee2.PyEuclidEmulator()
       
-      if self.use_baryonic_simulations_for_dv_contamination:
-        ci.init_baryons_contamination(self.which_baryonic_simulations_for_dv_contamination)
+      if self.add_baryons_on_dv:
+        ci.init_baryons_contamination(self.which_bsims_add_on_dv)
 
     if self.use_baryon_pca:
       baryon_pca_file = ini.relativeFileName('baryon_pca_file')
@@ -140,6 +127,7 @@ class _cosmolike_prototype_base(DataSetLikelihood):
       self.baryon_pcs_qs = np.zeros(self.npcs)
     else:
       self.log.info('use_baryon_pca = False')
+  
   # ------------------------------------------------------------------------
   # ------------------------------------------------------------------------
   # ------------------------------------------------------------------------
@@ -204,13 +192,6 @@ class _cosmolike_prototype_base(DataSetLikelihood):
           'tt': 0
         }
       }
-
-  # ------------------------------------------------------------------------
-  # ------------------------------------------------------------------------
-  # ------------------------------------------------------------------------
-
-  def compute_logp(self, datavector):
-    return -0.5 * ci.compute_chi2(datavector)
 
   # ------------------------------------------------------------------------
   # ------------------------------------------------------------------------
@@ -507,7 +488,8 @@ class _cosmolike_prototype_base(DataSetLikelihood):
       pcs = ci.compute_baryon_pcas(scenarios=self.baryon_pca_sims)
       np.savetxt(self.filename_baryon_pca, pcs)
     elif self.use_baryon_pca: 
-      Q = [params.get(p,0) for p in [survey+"_BARYON_Q"+str(i+1) for i in range(self.npcs)]]     
+      npcs = self.npcs
+      Q=[params.get(p,0) for p in [survey+"_BARYON_Q"+str(i+1) for i in range(npcs)]]     
       datavector = ci.compute_data_vector_masked_with_baryon_pcs(Q=Q)
     else:  
       datavector = ci.compute_data_vector_masked()

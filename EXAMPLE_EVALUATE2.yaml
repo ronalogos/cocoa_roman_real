@@ -10,7 +10,7 @@ likelihood:
     path: ./external_modules/data/roman_real
     data_file: example1.dataset # that assumes lens = source
     lmax: 100000            # lmax computed for real space correlation function
-    accuracyboost: 1.2      # ab=1.2 seems more appropriate
+    accuracyboost: 1.2      # (see jupyter)
     integration_accuracy: 0
     kmax_boltzmann: 7.5
     # 1 EE2, 2 Halofit
@@ -18,7 +18,9 @@ likelihood:
     IA_model: 0
     IA_redshift_evolution: 3
     ggl_exclude: [[6,0],[7,0],[7,1]]
-
+    create_baryon_pca: false
+    baryon_pca_select_sims: "antilles-2-99/antilles-101-378/antilles-380-400"
+    filename_baryon_pca: "./projects/lsst_y1/chains/pca.txt"
 params:
   As_1e9:
     prior:

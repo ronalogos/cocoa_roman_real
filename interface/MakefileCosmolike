@@ -32,7 +32,7 @@ CLOG :=1
 PYBIND := 1
 
 # LINK HDF5 LIBRARY
-#HDF5 := 1
+HDF5 := 1
 
 CSOURCES :=
 OBJECTC :=
@@ -136,6 +136,7 @@ ifdef PYBIND
 endif
 
 ifdef HDF5
+	CXXFLAGS += -DHDF5LIB
 	CFLAGS += -DHDF5LIB
 	LDLIBS += -lhdf5
 endif

@@ -107,24 +107,25 @@ class _cosmolike_prototype_base(DataSetLikelihood):
       if self.probe != "xi":
         # (b1, b2, bs2, b3, bmag). 0 = one amplitude per bin
         ci.init_bias(bias_model=self.bias_model)
-
-      if self.create_baryon_pca:
-        self.use_baryon_pca = False
       
       if self.non_linear_emul == 1:
         self.emulator = ee2.PyEuclidEmulator()
-      
-      if self.add_baryons_on_dv:
-        ci.init_baryons_contamination(self.which_bsims_add_on_dv)
+
+      if self.create_baryon_pca:
+        self.use_baryon_pca = False
+        self.allsims = ini.relativeFileName('all_sims_hdf5_file')
+      else:
+        if self.add_baryons_on_dv:
+          sim = self.which_bsims_add_on_dv
+          self.allsims = ini.relativeFileName('all_sims_hdf5_file')
+          ci.init_baryons_contamination(sim = sim, allsims=allsims)
 
     if self.use_baryon_pca:
       baryon_pca_file = ini.relativeFileName('baryon_pca_file')
-      self.baryon_pcs = np.loadtxt(baryon_pca_file)
-      ci.set_baryon_pcs(eigenvectors=self.baryon_pcs)
+      self.npcs = 4
+      ci.set_baryon_pcs(eigenvectors = np.loadtxt(baryon_pca_file))
       self.log.info('use_baryon_pca = True')
       self.log.info('baryon_pca_file = %s loaded', baryon_pca_file)
-      self.npcs = 4
-      self.baryon_pcs_qs = np.zeros(self.npcs)
     else:
       self.log.info('use_baryon_pca = False')
   
@@ -485,11 +486,11 @@ class _cosmolike_prototype_base(DataSetLikelihood):
     self.set_source_related(**params)
     
     if self.create_baryon_pca:
-      pcs = ci.compute_baryon_pcas(scenarios=self.baryon_pca_sims)
+      pcs = ci.compute_baryon_pcas(scenarios=self.baryon_pca_select_sims, allsims=self.allsims)
       np.savetxt(self.filename_baryon_pca, pcs)
+      datavector = ci.compute_data_vector_masked()
     elif self.use_baryon_pca: 
-      npcs = self.npcs
-      Q=[params.get(p,0) for p in [survey+"_BARYON_Q"+str(i+1) for i in range(npcs)]]     
+      Q = [params.get(p,0) for p in [survey+"_BARYON_Q"+str(i+1) for i in range(self.npcs)]]     
       datavector = ci.compute_data_vector_masked_with_baryon_pcs(Q=Q)
     else:  
       datavector = ci.compute_data_vector_masked()

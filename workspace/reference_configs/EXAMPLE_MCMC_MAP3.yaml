@@ -1,0 +1,26 @@
+# Example snippet for joint cosmic shear 2pt + map3 in this fork.
+# Merge this likelihood/theory block into your full Cobaya config
+# (e.g. one of the existing EXAMPLE_MCMC*.yaml files with your params/sampler).
+
+likelihood:
+  roman_real.cosmic_shear_2pt_map3:
+    path: ./external_modules/data/roman_real
+    data_file: example1.dataset
+    lmax: 70000
+    accuracyboost: 1.0
+    integration_accuracy: 0
+    kmax_boltzmann: 7.5
+    non_linear_emul: 2
+    IA_model: 0
+    IA_redshift_evolution: 3
+    ggl_exclude: [[6,0],[7,0],[7,1]]
+
+    # Simulation-based joint covariance/data placeholders (xi followed by map3).
+    joint_data_vector_file: ./external_modules/data/roman_real/joint_xi_map3_data.txt
+    joint_cov_file: ./external_modules/data/roman_real/joint_xi_map3_cov.txt
+    joint_mask_file: ./external_modules/data/roman_real/joint_xi_map3_mask.txt
+
+theory:
+  # Placeholder: replace with your actual map3 provider component.
+  map3_provider:
+    python_path: ./external_modules/code
